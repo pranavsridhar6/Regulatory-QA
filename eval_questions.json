@@ -1,0 +1,182 @@
+[
+  {
+    "id": "q01",
+    "type": "in_corpus",
+    "question": "What were the five most frequent bases for an RTR determination in FY 2015?",
+    "expected_answer": "In order: inadequate stability data; incomplete information request response; inadequate dissolution; not Q1/Q2 same as the RLD; failure to respond to an information request within the prescribed timeframe.",
+    "key_facts": [["stability"], ["information request"], ["dissolution"]],
+    "expected_doc": "ANDA-Submissions----Refuse-to-Receive-Standards-Rev.2.pdf",
+    "pdf_pages": [6]
+  },
+  {
+    "id": "q02",
+    "type": "in_corpus",
+    "question": "How long does an applicant have to correct minor deficiencies identified during filing review, and when does that period start?",
+    "expected_answer": "7 calendar days, beginning the day after notification is provided.",
+    "key_facts": [["7 calendar days", "seven calendar days", "seven (7) calendar days"], ["day after"]],
+    "expected_doc": "ANDA-Submissions----Refuse-to-Receive-Standards-Rev.2.pdf",
+    "pdf_pages": [6]
+  },
+  {
+    "id": "q03",
+    "type": "in_corpus",
+    "question": "What happens if FDA finds ten or more minor deficiencies in an ANDA?",
+    "expected_answer": "FDA will not consider the ANDA substantially complete (it is not received); a corrected resubmission is a new ANDA and requires a new ANDA fee.",
+    "key_facts": [["substantially complete", "not received", "refuse to receive", "RTR"], ["new ANDA"]],
+    "expected_doc": "ANDA-Submissions----Refuse-to-Receive-Standards-Rev.2.pdf",
+    "pdf_pages": [6, 7]
+  },
+  {
+    "id": "q04",
+    "type": "in_corpus",
+    "question": "What is the difference between a reference listed drug and a reference standard?",
+    "expected_answer": "The RLD is the approved drug the generic is intended to duplicate. The reference standard is the drug product selected by FDA that must be used in any in vivo bioequivalence study; it is ordinarily the RLD.",
+    "key_facts": [["duplicate", "same as", "sameness"], ["bioequivalence"]],
+    "expected_doc": "GUI_Final_Referencing_Approved _Oct 2020.pdf",
+    "pdf_pages": [4]
+  },
+  {
+    "id": "q05",
+    "type": "in_corpus",
+    "question": "Can an ANDA applicant change its RLD after the ANDA has been submitted?",
+    "expected_answer": "No. The applicant cannot amend or supplement the ANDA to change the RLD; it must submit a new ANDA.",
+    "key_facts": [["new ANDA", "prohibit", "cannot"]],
+    "expected_doc": "GUI_Final_Referencing_Approved _Oct 2020.pdf",
+    "pdf_pages": [10, 11]
+  },
+  {
+    "id": "q06",
+    "type": "in_corpus",
+    "question": "Within how many days of submitting an ANDA must the GDUFA ANDA fee be paid to avoid a refuse-to-receive?",
+    "expected_answer": "20 calendar days.",
+    "key_facts": [["20 calendar days", "twenty calendar days", "20 days"]],
+    "expected_doc": "ANDA-Submissions----Refuse-to-Receive-Standards-Rev.2.pdf",
+    "pdf_pages": [8]
+  },
+  {
+    "id": "q07",
+    "type": "in_corpus",
+    "question": "How many batches and how much stability data should an ANDA include to avoid refuse-to-receive?",
+    "expected_answer": "Three pilot-scale batches (or two pilot-scale and one small-scale), with accelerated and long-term data covering at least 6 months (180 days) and three time points.",
+    "key_facts": [["three pilot-scale", "3 pilot-scale", "three pilot scale"], ["6 months", "six months", "180 days"]],
+    "expected_doc": "ANDA-Submissions----Refuse-to-Receive-Standards-Rev.2.pdf",
+    "pdf_pages": [12]
+  },
+  {
+    "id": "q08",
+    "type": "in_corpus",
+    "question": "In which ANDA section does the debarment certification go?",
+    "expected_answer": "Section 1.3.3 (Module 1), as required under the Generic Drug Enforcement Act of 1992.",
+    "key_facts": [["1.3.3"]],
+    "expected_doc": "GUI_Final_level 2_ ANDA Submissions - Content and Format_Revised_June_2019_0.pdf",
+    "pdf_pages": [8]
+  },
+  {
+    "id": "q09",
+    "type": "in_corpus",
+    "question": "What is FDA's review goal for level 1 controlled correspondence?",
+    "expected_answer": "FDA will review and respond to 90 percent of level 1 controlled correspondence within 60 calendar days of submission.",
+    "key_facts": [["60 calendar days", "60 days", "sixty"], ["90 percent", "90%"]],
+    "expected_doc": "54373781fnl_Controlled Correspondence Related to Generic Drug Development.pdf",
+    "pdf_pages": [5]
+  },
+  {
+    "id": "q10",
+    "type": "in_corpus",
+    "question": "Where should a private citizen or financial firm send questions about generic drugs, since they cannot submit controlled correspondence?",
+    "expected_answer": "FDA's Division of Drug Information.",
+    "key_facts": [["Division of Drug Information"]],
+    "expected_doc": "54373781fnl_Controlled Correspondence Related to Generic Drug Development.pdf",
+    "pdf_pages": [12]
+  },
+  {
+    "id": "q11",
+    "type": "in_corpus",
+    "question": "What exclusivity is granted to the first applicant that files a substantially complete ANDA with a paragraph IV certification?",
+    "expected_answer": "A 180-day period of exclusivity versus certain other ANDA applicants.",
+    "key_facts": [["180-day", "180 day", "180 days"]],
+    "expected_doc": "GUI_FINAL_GoodANDASubmissionPractices_Published_Jan 2022.pdf",
+    "pdf_pages": [9]
+  },
+  {
+    "id": "q12",
+    "type": "in_corpus",
+    "question": "If the patent owner sues after receiving notice of a paragraph IV certification, how long is ANDA approval generally stayed, and within what time must the suit be filed?",
+    "expected_answer": "Suit within 45 days of receiving the notice; approval is generally stayed for 30 months.",
+    "key_facts": [["45 days"], ["30 months", "30-month"]],
+    "expected_doc": "GUI_FINAL_GoodANDASubmissionPractices_Published_Jan 2022.pdf",
+    "pdf_pages": [8]
+  },
+  {
+    "id": "q13",
+    "type": "in_corpus",
+    "question": "How long should the washout period be between treatments in a BE study?",
+    "expected_answer": "More than five half-lives of the moieties being measured.",
+    "key_facts": [["five half-lives", "5 half-lives", "five half lives", "5 half lives"]],
+    "expected_doc": "54374223fnl_bioequivalence_studies_with_pharmacokinetic_endpoints_for_drugs_submitted_under_an_anda.pdf",
+    "pdf_pages": [30]
+  },
+  {
+    "id": "q14",
+    "type": "in_corpus",
+    "question": "What confidence interval limits must be met for unscaled average bioequivalence?",
+    "expected_answer": "The 90 percent confidence interval must fall within 80 to 125 percent; the rounded value must be at least 80.00 and not more than 125.00.",
+    "key_facts": [["80"], ["125"]],
+    "expected_doc": "54374223fnl_bioequivalence_studies_with_pharmacokinetic_endpoints_for_drugs_submitted_under_an_anda.pdf",
+    "pdf_pages": [33]
+  },
+  {
+    "id": "q15",
+    "type": "tricky",
+    "question": "What is FDA's review goal for level 2 controlled correspondence?",
+    "expected_answer": "90 percent within 120 calendar days of submission. (Trap: level 1 is 60 days.)",
+    "key_facts": [["120"]],
+    "expected_doc": "54373781fnl_Controlled Correspondence Related to Generic Drug Development.pdf",
+    "pdf_pages": [5]
+  },
+    {
+    "id": "q16",
+    "type": "tricky",
+    "question": "What is the minimum number of subjects with evaluable data in a pivotal BE study, and is it different for highly variable drug products?",
+    "expected_answer": "Not less than 12 in general; a minimum of 24 is recommended for highly variable drug products.",
+    "key_facts": [["12", "twelve"], ["24", "twenty-four"]],
+    "expected_doc": "54374223fnl_bioequivalence_studies_with_pharmacokinetic_endpoints_for_drugs_submitted_under_an_anda.pdf",
+    "pdf_pages": [10]
+  },
+  {
+    "id": "q17",
+    "type": "tricky",
+    "question": "How long does a requestor have to ask FDA to clarify an ambiguity in a controlled correspondence response?",
+    "expected_answer": "Within 7 calendar days of FDA issuing the response. (Trap: 21 days is FDA's goal for answering the clarification request.)",
+    "key_facts": [["7 calendar days", "seven calendar days", "7 days", "seven days"]],
+    "expected_doc": "54373781fnl_Controlled Correspondence Related to Generic Drug Development.pdf",
+    "pdf_pages": [27]
+  },
+  {
+    "id": "q18",
+    "type": "out_of_corpus",
+    "question": "What is the GDUFA ANDA filing fee for FY2026?",
+    "expected_answer": "The loaded FDA guidance documents do not address this.",
+    "key_facts": [],
+    "expected_doc": null,
+    "pdf_pages": []
+  },
+  {
+    "id": "q19",
+    "type": "out_of_corpus",
+    "question": "What does the FDA evaluate when moving a drug through clinical trial phases?",
+    "expected_answer": "The loaded FDA guidance documents do not address this.",
+    "key_facts": [],
+    "expected_doc": null,
+    "pdf_pages": []
+  },
+  {
+    "id": "q20",
+    "type": "out_of_corpus",
+    "question": "What data is required for a biosimilar to be designated interchangeable?",
+    "expected_answer": "The loaded FDA guidance documents do not address this.",
+    "key_facts": [],
+    "expected_doc": null,
+    "pdf_pages": []
+  }
+]

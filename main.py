@@ -1,4 +1,6 @@
 import os
+import warnings
+
 
 from dotenv import load_dotenv
 
@@ -13,10 +15,10 @@ from langchain_core.prompts import PromptTemplate
 from langchain_core.globals import set_llm_cache
 from langchain_community.cache import SQLiteCache
 
-
-
-
 load_dotenv()
+
+# --- Hide LangChain's harmless "allowed_objects" notice that prints on every cache read ---
+warnings.filterwarnings("ignore", message=".*allowed_objects")
 
 DOC_INFO = {
     '54373781fnl_Controlled Correspondence Related to Generic Drug Development.pdf':
