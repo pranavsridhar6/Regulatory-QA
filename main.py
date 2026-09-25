@@ -28,7 +28,7 @@ DOC_INFO = {
         {'title': 'Referencing Approved Drug Products in ANDA Submissions (Oct 2020)', 'status': 'FINAL'},
 }
 
-
+NO_ANSWER = "The loaded FDA guidance documents do not address this."
 
 PROMPT_TEXT = """You answer questions about FDA generic-drug (ANDA) guidance documents.
 
@@ -87,6 +87,8 @@ if __name__ == '__main__':
 
         print('Answer:')
         print(answer['result'])
+        if answer['result'].strip() == NO_ANSWER:
+            continue
         print('\nSource Documents:')
         seen=set()
         for doc in answer['source_documents']:
