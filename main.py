@@ -12,9 +12,23 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 load_dotenv()
 
+DOC_INFO = {
+    '54373781fnl_Controlled Correspondence Related to Generic Drug Development.pdf':
+        {'title': 'Controlled Correspondence Related to Generic Drug Development', 'status': 'FINAL'},
+    '54374223fnl_bioequivalence_studies_with_pharmacokinetic_endpoints_for_drugs_submitted_under_an_anda.pdf':
+        {'title': 'Bioequivalence Studies With PK Endpoints for Drugs Submitted Under an ANDA', 'status': 'FINAL'},
+    'ANDA-Submissions----Refuse-to-Receive-Standards-Rev.2.pdf':
+        {'title': 'ANDA Submissions: Refuse-to-Receive Standards (Rev. 2)', 'status': 'FINAL'},
+    'GUI_FINAL_GoodANDASubmissionPractices_Published_Jan 2022.pdf':
+        {'title': 'Good ANDA Submission Practices (Jan 2022)', 'status': 'FINAL'},
+    'GUI_Final_level 2_ ANDA Submissions - Content and Format_Revised_June_2019_0.pdf':
+        {'title': 'ANDA Submissions: Content and Format (Rev. 1, June 2019)', 'status': 'FINAL'},
+    'GUI_Final_Referencing_Approved _Oct 2020.pdf':
+        {'title': 'Referencing Approved Drug Products in ANDA Submissions (Oct 2020)', 'status': 'FINAL'},
+}
 
 def setup_qa_system(folder_path):
-    loader = PyPDFDirectoryLoader(folder_path)
+    loader = PyPDFDirectoryLoader(folder_path, glob="*.pdf")
     documents = loader.load()
 
     print(f"Loaded {len(documents)} pages")
@@ -28,7 +42,11 @@ def setup_qa_system(folder_path):
     retriever = vector_store.as_retriever()
     llm = ChatAnthropic(model="claude-sonnet-4-6")
 
-    qa_chain = RetrievalQA.from_chain_type(llm, retriever=retriever)
+    qa_chain = RetrievalQA.from_chain_type(
+        llm,
+        retriever=retriever,
+        return_source_documents=True,
+    )
 
     return qa_chain
 
@@ -44,6 +62,16 @@ if __name__ == '__main__':
 
         print('Answer:')
         print(answer['result'])
+        print('\nSource Documents:')
+        seen=set()
+        for doc in answer['source_documents']:
+            file_name = os.path.basename(doc.metadata['source'])
+            page_number = doc.metadata['page'] + 1
+            info = DOC_INFO.get(file_name, {'title': file_name, 'status': 'UNTAGGED'})
+            citation = f"{info['title']} [{info['status']}], PDF Page: {page_number}"
+            if citation not in seen:
+                seen.add(citation)
+                print(citation)
 
 
 
