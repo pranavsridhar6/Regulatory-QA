@@ -5,3 +5,4 @@ __pycache__/
 chroma_db/
 db/
 faiss_index/
+llm_cache.db

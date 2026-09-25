@@ -10,6 +10,11 @@ from langchain_anthropic import ChatAnthropic
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_core.prompts import PromptTemplate
+from langchain_core.globals import set_llm_cache
+from langchain_community.cache import SQLiteCache
+
+
+
 
 load_dotenv()
 
@@ -51,6 +56,12 @@ QA_PROMPT = PromptTemplate(template=PROMPT_TEXT, input_variables=["context", "qu
 
 # Folder where the search index is saved, so we don't rebuild it every run
 INDEX_DIR = "faiss_index"
+
+# File where Claude's answers are saved. Same prompt in = saved answer out, no new API call.
+# Delete this file to force fresh answers from Claude.
+CACHE_PATH = "llm_cache.db"
+# --- Answer cache: makes repeat questions return identical answers (needed for a repeatable eval) ---
+set_llm_cache(SQLiteCache(database_path=CACHE_PATH))
 
 def setup_qa_system(folder_path):
     # Embedder: turns text into 384 numbers that capture its meaning
