@@ -62,6 +62,10 @@ INDEX_DIR = "faiss_index"
 # File where Claude's answers are saved. Same prompt in = saved answer out, no new API call.
 # Delete this file to force fresh answers from Claude.
 CACHE_PATH = "llm_cache.db"
+
+# How many chunks the search returns per question. Default was 4. Change this to experiment.
+TOP_K = 8
+
 # --- Answer cache: makes repeat questions return identical answers (needed for a repeatable eval) ---
 set_llm_cache(SQLiteCache(database_path=CACHE_PATH))
 
@@ -90,7 +94,8 @@ def setup_qa_system(folder_path):
         vector_store.save_local(INDEX_DIR)
         print("Built and saved new index")
 
-    retriever = vector_store.as_retriever()
+    # --- Retriever: returns the TOP_K closest chunks to each question ---
+    retriever = vector_store.as_retriever(search_kwargs={"k": TOP_K})
     llm = ChatAnthropic(model="claude-sonnet-4-6")
 
     qa_chain = RetrievalQA.from_chain_type(
