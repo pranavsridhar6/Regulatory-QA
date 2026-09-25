@@ -9,6 +9,7 @@ from langchain_community.vectorstores import FAISS
 from langchain_anthropic import ChatAnthropic
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_core.prompts import PromptTemplate
 
 load_dotenv()
 
@@ -26,6 +27,29 @@ DOC_INFO = {
     'GUI_Final_Referencing_Approved _Oct 2020.pdf':
         {'title': 'Referencing Approved Drug Products in ANDA Submissions (Oct 2020)', 'status': 'FINAL'},
 }
+
+
+
+PROMPT_TEXT = """You answer questions about FDA generic-drug (ANDA) guidance documents.
+
+Use only the excerpts below. Start directly with the answer. Do not open with phrases like "Based on the provided context", and do not mention the excerpts or the context.
+
+If the excerpts answer only part of the question, answer that part and say which part the documents do not cover.
+
+If the excerpts do not answer the question at all, reply with exactly: "The loaded FDA guidance documents do not address this."
+
+Write in plain text. No markdown headers and no bold.
+
+Excerpts:
+{context}
+
+Question: {question}
+
+Answer:"""
+
+QA_PROMPT = PromptTemplate(template=PROMPT_TEXT, input_variables=["context", "question"])
+
+
 
 def setup_qa_system(folder_path):
     loader = PyPDFDirectoryLoader(folder_path, glob="*.pdf")
@@ -46,6 +70,7 @@ def setup_qa_system(folder_path):
         llm,
         retriever=retriever,
         return_source_documents=True,
+        chain_type_kwargs={"prompt": QA_PROMPT}
     )
 
     return qa_chain
