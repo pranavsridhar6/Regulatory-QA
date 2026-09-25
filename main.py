@@ -49,19 +49,33 @@ Answer:"""
 
 QA_PROMPT = PromptTemplate(template=PROMPT_TEXT, input_variables=["context", "question"])
 
-
+# Folder where the search index is saved, so we don't rebuild it every run
+INDEX_DIR = "faiss_index"
 
 def setup_qa_system(folder_path):
-    loader = PyPDFDirectoryLoader(folder_path, glob="*.pdf")
-    documents = loader.load()
-
-    print(f"Loaded {len(documents)} pages")
-
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
-    chunks = text_splitter.split_documents(documents)
-
+    # Embedder: turns text into 384 numbers that capture its meaning
     embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
-    vector_store = FAISS.from_documents(chunks, embeddings)
+
+    if os.path.exists(INDEX_DIR):
+        # A saved index exists: load it instead of re-reading all the PDFs
+        vector_store = FAISS.load_local(
+            INDEX_DIR, embeddings, allow_dangerous_deserialization=True
+        )
+        print("Loaded saved index")
+    else:
+        # No saved index yet: read the PDFs in docs\ only (not docs\later\)
+        loader = PyPDFDirectoryLoader(folder_path, glob="*.pdf")
+        documents = loader.load()
+        print(f"Loaded {len(documents)} pages")
+
+        # Cut pages into 1000-character chunks that overlap by 200 characters
+        text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
+        chunks = text_splitter.split_documents(documents)
+
+        # Turn every chunk into numbers, build the index, and save it to disk
+        vector_store = FAISS.from_documents(chunks, embeddings)
+        vector_store.save_local(INDEX_DIR)
+        print("Built and saved new index")
 
     retriever = vector_store.as_retriever()
     llm = ChatAnthropic(model="claude-sonnet-4-6")
