@@ -73,6 +73,16 @@ CACHE_PATH = "llm_cache.db"
 # How many chunks the search returns per question. Default was 4. Change this to experiment.
 TOP_K = 8
 
+# Bump this number whenever the index-building code changes, so old indexes rebuild automatically
+INDEX_VERSION = 2
+
+# Phrases FDA prints on draft guidance. Plain "draft" is not enough: final guidances often cite other drafts.
+DRAFT_MARKERS = ["not for implementation", "distributed for comment purposes only"]
+
+# Phrases found on FDA guidance generally (draft or final)
+GUIDANCE_MARKERS = ["contains nonbinding recommendations", "guidance for industry"]
+
+
 # --- Answer cache: makes repeat questions return identical answers (needed for a repeatable eval) ---
 set_llm_cache(SQLiteCache(database_path=CACHE_PATH))
 
@@ -81,7 +91,15 @@ set_llm_cache(SQLiteCache(database_path=CACHE_PATH))
 def simple_tokenize(text):
     return re.findall(r"\w+(?:\.\w+)*", text.lower())
 
-
+# --- Work out a document's status from the text of its first 3 pages ---
+def detect_status(pages):
+    text = " ".join(page.page_content for page in pages[:3])
+    text = " ".join(text.split()).lower()
+    if any(marker in text for marker in DRAFT_MARKERS):
+        return "DRAFT"
+    if any(marker in text for marker in GUIDANCE_MARKERS):
+        return "FINAL"
+    return "N/A"
 
 # --- Fingerprint of the docs folder: each PDF's name, size, and last-modified time ---
 # If any PDF is added, removed, or edited, the fingerprint changes and the index rebuilds.
@@ -91,7 +109,7 @@ def docs_fingerprint(folder_path):
         if name.lower().endswith(".pdf"):
             stats = os.stat(os.path.join(folder_path, name))
             files.append([name, stats.st_size, int(stats.st_mtime)])
-    return files
+    return {"version": INDEX_VERSION, "files": files}
 
 
 
@@ -117,7 +135,14 @@ def setup_qa_system(folder_path):
         # No saved index yet: read the PDFs in docs\ only (not docs\later\)
         loader = PyPDFDirectoryLoader(folder_path, glob="*.pdf")
         documents = loader.load()
-        print(f"Loaded {len(documents)} pages")
+        # --- Group pages by file, detect each file's status, and label every page with it ---
+        pages_by_file = {}
+        for page in documents:
+            pages_by_file.setdefault(page.metadata["source"], []).append(page)
+        for source, pages in pages_by_file.items():
+            status = detect_status(pages)
+            for page in pages:
+                page.metadata["status"] = status
 
         # Cut pages into 1000-character chunks that overlap by 200 characters
         text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
@@ -171,8 +196,10 @@ if __name__ == '__main__':
         for doc in answer['source_documents']:
             file_name = os.path.basename(doc.metadata['source'])
             page_number = doc.metadata['page'] + 1
-            info = DOC_INFO.get(file_name, {'title': file_name, 'status': 'UNTAGGED'})
-            citation = f"{info['title']} [{info['status']}], PDF Page: {page_number}"
+            # Title from DOC_INFO if listed, otherwise the file name. Status comes from the PDF text.
+            title = DOC_INFO.get(file_name, {}).get('title', file_name)
+            status = doc.metadata.get('status', 'UNTAGGED')
+            citation = f"{title} [{status}], PDF Page: {page_number}"
             if citation not in seen:
                 seen.add(citation)
                 print(citation)
