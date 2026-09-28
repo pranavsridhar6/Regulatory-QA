@@ -74,7 +74,7 @@ CACHE_PATH = "llm_cache.db"
 TOP_K = 8
 
 # Bump this number whenever the index-building code changes, so old indexes rebuild automatically
-INDEX_VERSION = 2
+INDEX_VERSION = 3
 
 # Phrases FDA prints on draft guidance. Plain "draft" is not enough: final guidances often cite other drafts.
 DRAFT_MARKERS = ["not for implementation", "distributed for comment purposes only"]
@@ -90,6 +90,56 @@ set_llm_cache(SQLiteCache(database_path=CACHE_PATH))
 # --- Split text into lowercase words for keyword search. Keeps section codes like "1.3.3" whole. ---
 def simple_tokenize(text):
     return re.findall(r"\w+(?:\.\w+)*", text.lower())
+
+# --- Line-number cleanup for PDFs with printed margin line numbers ---
+# A number at the end of a line (or alone on a line), and a number at the start of a line
+TRAILING_NUMBER = re.compile(r"(?:^|\s)(\d{1,4})\s*$")
+LEADING_NUMBER = re.compile(r"^\s*(\d{1,4})\s+(?=\S)")
+
+
+# Find the longest stretch of consecutive whole numbers in a list, e.g. 32, 33, ..., 76
+def longest_run(numbers):
+    present = set(numbers)
+    best = (0, 0)
+    for n in present:
+        if n - 1 not in present:
+            high = n
+            while high + 1 in present:
+                high += 1
+            if high - n > best[1] - best[0]:
+                best = (n, high)
+    return best
+
+
+# Remove printed line numbers from one page of text. Pages without them come back unchanged.
+def clean_line_numbers(text):
+    lines = text.split("\n")
+
+    # Collect every number sitting at the start or end of a line
+    candidates = []
+    for line in lines:
+        for pattern in (TRAILING_NUMBER, LEADING_NUMBER):
+            match = pattern.search(line)
+            if match:
+                candidates.append(int(match.group(1)))
+
+    # Line numbers form a long unbroken run. No run of 20+ means no line numbers: leave the page alone.
+    low, high = longest_run(candidates)
+    if high - low + 1 < 20:
+        return text
+
+    # Remove only numbers inside that run, so table values and footnote markers survive
+    cleaned = []
+    for line in lines:
+        match = TRAILING_NUMBER.search(line)
+        if match and low <= int(match.group(1)) <= high:
+            line = line[:match.start()]
+        match = LEADING_NUMBER.search(line)
+        if match and low <= int(match.group(1)) <= high:
+            line = line[match.end():]
+        cleaned.append(line)
+    return "\n".join(cleaned)
+
 
 # --- Work out a document's status from the text of its first 3 pages ---
 def detect_status(pages):
@@ -115,7 +165,7 @@ def docs_fingerprint(folder_path):
 
 
 def setup_qa_system(folder_path):
-    # Embedder: turns text into 384 numbers that capture its meaning
+# Embedder: turns text into 384 numbers that capture its meaning
     embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
 
         # --- Compare the PDFs in the folder now against the ones the saved index was built from ---
@@ -132,9 +182,15 @@ def setup_qa_system(folder_path):
         )
         print("Loaded saved index")
     else:
-        # No saved index yet: read the PDFs in docs\ only (not docs\later\)
+        # No saved index, or the PDFs/version changed: read the PDFs in docs\ only (not docs\later\)
         loader = PyPDFDirectoryLoader(folder_path, glob="*.pdf")
         documents = loader.load()
+        print(f"Loaded {len(documents)} pages")
+
+        # --- Strip printed margin line numbers (pages without them are left unchanged) ---
+        for page in documents:
+            page.page_content = clean_line_numbers(page.page_content)
+
         # --- Group pages by file, detect each file's status, and label every page with it ---
         pages_by_file = {}
         for page in documents:
@@ -150,13 +206,15 @@ def setup_qa_system(folder_path):
 
         # Turn every chunk into numbers, build the index, and save it to disk
         vector_store = FAISS.from_documents(chunks, embeddings)
-                # Record which PDFs this index was built from, for the check on the next run
+        vector_store.save_local(INDEX_DIR)
+
+        # Record which PDFs this index was built from, for the check on the next run
         with open(FINGERPRINT_FILE, "w", encoding="utf-8") as f:
             json.dump(current, f)
         print("Built and saved new index")
 
-    # --- Retriever: returns the TOP_K closest chunks to each question ---
-        # --- Keyword search (BM25): scores chunks by shared words, rare words count most ---
+
+    # --- Keyword search (BM25): scores chunks by shared words, rare words count most ---
     all_chunks = list(vector_store.docstore._dict.values())
     keyword_retriever = BM25Retriever.from_documents(all_chunks, preprocess_func=simple_tokenize)
     keyword_retriever.k = TOP_K // 2
