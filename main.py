@@ -76,6 +76,33 @@ QA_PROMPT = PromptTemplate(template=PROMPT_TEXT, input_variables=["context", "qu
 # How each retrieved chunk appears inside {context}: its status label, then its text
 DOC_PROMPT = PromptTemplate(template="[{status}]\n{page_content}", input_variables=["page_content", "status"])
 
+
+
+# --- General-purpose prompt for documents the user uploads (not specific to FDA) ---
+UPLOAD_NO_ANSWER = "The uploaded documents do not address this."
+
+UPLOAD_PROMPT_TEXT = """You answer questions using only the excerpts below, taken from documents the user uploaded.
+
+Start directly with the answer. Do not open with phrases like "Based on the provided context", and do not mention the excerpts or the context. Do not use outside knowledge, even if you know the answer.
+
+Each excerpt is labeled with a status. [DRAFT] means the source is a draft that is not final; if you use a DRAFT excerpt, say so clearly. [FINAL] and [N/A] excerpts can be used normally.
+
+If the excerpts answer only part of the question, answer that part and say which part the documents do not cover.
+
+If the excerpts do not answer the question at all, reply with exactly: "The uploaded documents do not address this."
+
+Write in plain text. No markdown headers and no bold.
+
+Excerpts:
+{context}
+
+Question: {question}
+
+Answer:"""
+
+UPLOAD_PROMPT = PromptTemplate(template=UPLOAD_PROMPT_TEXT, input_variables=["context", "question"])
+
+
 # Folder where the search index is saved, so we don't rebuild it every run
 INDEX_DIR = "faiss_index"
 
