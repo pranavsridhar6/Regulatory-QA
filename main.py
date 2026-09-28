@@ -78,8 +78,6 @@ DOC_PROMPT = PromptTemplate(template="[{status}]\n{page_content}", input_variabl
 
 # Folder where the search index is saved, so we don't rebuild it every run
 INDEX_DIR = "faiss_index"
-# File inside the index folder recording which PDFs the index was built from
-FINGERPRINT_FILE = os.path.join(INDEX_DIR, "fingerprint.json")
 
 # File where Claude's answers are saved. Same prompt in = saved answer out, no new API call.
 # Delete this file to force fresh answers from Claude.
@@ -179,21 +177,24 @@ def docs_fingerprint(folder_path):
 
 
 
-def setup_qa_system(folder_path):
-# Embedder: turns text into 384 numbers that capture its meaning
+def setup_qa_system(folder_path, index_dir=INDEX_DIR, qa_prompt=QA_PROMPT):
+    # Embedder: turns text into 384 numbers that capture its meaning
     embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
 
-        # --- Compare the PDFs in the folder now against the ones the saved index was built from ---
+    # The fingerprint file lives inside whichever index folder this call uses
+    fingerprint_file = os.path.join(index_dir, "fingerprint.json")
+
+    # --- Compare the PDFs in the folder now against the ones the saved index was built from ---
     current = docs_fingerprint(folder_path)
     saved = None
-    if os.path.exists(FINGERPRINT_FILE):
-        with open(FINGERPRINT_FILE, encoding="utf-8") as f:
+    if os.path.exists(fingerprint_file):
+        with open(fingerprint_file, encoding="utf-8") as f:
             saved = json.load(f)
 
     if saved == current:
         # A saved index exists: load it instead of re-reading all the PDFs
         vector_store = FAISS.load_local(
-            INDEX_DIR, embeddings, allow_dangerous_deserialization=True
+            index_dir, embeddings, allow_dangerous_deserialization=True
         )
         print("Loaded saved index")
     else:
@@ -221,10 +222,10 @@ def setup_qa_system(folder_path):
 
         # Turn every chunk into numbers, build the index, and save it to disk
         vector_store = FAISS.from_documents(chunks, embeddings)
-        vector_store.save_local(INDEX_DIR)
+        vector_store.save_local(index_dir)
 
         # Record which PDFs this index was built from, for the check on the next run
-        with open(FINGERPRINT_FILE, "w", encoding="utf-8") as f:
+        with open(fingerprint_file, "w", encoding="utf-8") as f:
             json.dump(current, f)
         print("Built and saved new index")
 
@@ -245,7 +246,7 @@ def setup_qa_system(folder_path):
         llm,
         retriever=retriever,
         return_source_documents=True,
-        chain_type_kwargs={"prompt": QA_PROMPT, "document_prompt": DOC_PROMPT},
+        chain_type_kwargs={"prompt": qa_prompt, "document_prompt": DOC_PROMPT},
     )
 
     return qa_chain
