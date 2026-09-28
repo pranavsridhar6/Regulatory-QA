@@ -6,8 +6,10 @@ import uuid
 
 import streamlit as st
 
+
+
 from main import (
-    setup_qa_system, get_citations, docs_fingerprint,
+    setup_qa_system, get_citations, docs_fingerprint, summarize_pdf,
     QA_PROMPT, UPLOAD_PROMPT, NO_ANSWER, UPLOAD_NO_ANSWER, INDEX_DIR,
 )
 
@@ -87,6 +89,17 @@ history_key = f"messages_{mode}"
 if history_key not in st.session_state:
     st.session_state[history_key] = []
 messages = st.session_state[history_key]
+
+
+# --- Sidebar: summarize one whole document; the summary appears in the chat ---
+pdf_names = sorted(name for name in os.listdir(folder) if name.lower().endswith(".pdf"))
+st.sidebar.divider()
+chosen = st.sidebar.selectbox("Summarize a document", pdf_names)
+if st.sidebar.button("Summarize"):
+    with st.spinner(f"Reading all of {chosen}..."):
+        summary = summarize_pdf(os.path.join(folder, chosen))
+    messages.append({"role": "user", "content": f"Summarize: {chosen}"})
+    messages.append({"role": "assistant", "content": summary})
 
 # --- Redraw every earlier message on each rerun ---
 for message in messages:

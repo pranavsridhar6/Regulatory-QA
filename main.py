@@ -5,6 +5,7 @@ import warnings
 from dotenv import load_dotenv
 
 from langchain_community.document_loaders import PyPDFLoader
+from langchain_community.document_loaders import PyPDFLoader
 from langchain_community.document_loaders import PyPDFDirectoryLoader
 from langchain.chains import RetrievalQA
 from langchain_community.vectorstores import FAISS
@@ -18,6 +19,7 @@ import json
 import re
 from langchain_community.retrievers import BM25Retriever
 from langchain.retrievers import EnsembleRetriever
+
 
 
 load_dotenv()
@@ -277,6 +279,48 @@ def setup_qa_system(folder_path, index_dir=INDEX_DIR, qa_prompt=QA_PROMPT):
     )
 
     return qa_chain
+
+# Longest document text (in characters) sent in one summary call.
+# About 4 characters per token, so 400,000 characters is roughly 100,000 tokens: safely within Claude's limit.
+MAX_SUMMARY_CHARS = 400_000
+
+SUMMARY_PROMPT_TEXT = """Summarize the document below for a professional reader.
+
+Use only the document text. Do not add outside knowledge.
+{status_note}
+Start with one sentence on what the document is and its purpose. Then cover the key requirements, recommendations, or facts. Then list any deadlines, numbers, or thresholds it states. Write in plain text with short paragraphs. No markdown headers and no bold.
+
+Document:
+{text}
+
+Summary:"""
+
+
+# --- Summarize one whole PDF in a single call to Claude ---
+def summarize_pdf(path):
+    # Read every page, clean line numbers, and detect draft/final, exactly as when building the index
+    pages = PyPDFLoader(path).load()
+    for page in pages:
+        page.page_content = clean_line_numbers(page.page_content)
+    status = detect_status(pages)
+
+    # Join all pages into one text, cutting it at the size limit if needed
+    text = "\n\n".join(page.page_content for page in pages)
+    truncated = len(text) > MAX_SUMMARY_CHARS
+    text = text[:MAX_SUMMARY_CHARS]
+
+    # Drafts must be flagged in the summary itself
+    status_note = ""
+    if status == "DRAFT":
+        status_note = "This document is a DRAFT that is not final. Say so in the first sentence."
+
+    llm = ChatAnthropic(model="claude-sonnet-4-6")
+    prompt = SUMMARY_PROMPT_TEXT.format(status_note=status_note, text=text)
+    summary = llm.invoke(prompt).content
+
+    if truncated:
+        summary += "\n\n(Note: this document was too long to read in full. The summary covers only the first part.)"
+    return summary
 
 # --- Turn an answer's retrieved chunks into readable citations, one per page, no duplicates ---
 def get_citations(answer):

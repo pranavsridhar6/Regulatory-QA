@@ -1,3 +1,11 @@
+# Regulatory QA
+
+Ask questions about documents and get answers drawn **only** from those documents, with a citation (document, draft/final status, page) for every answer. Works on a built-in library of 9 FDA generic-drug guidance documents, or on PDFs you upload.
+
+**Run it:** `python -m streamlit run app.py`, then open http://localhost:8501
+
+**Stack:** Python, LangChain, FAISS + BM25 hybrid search, HuggingFace embeddings (local), Claude (Anthropic API), Streamlit.
+
 ## Draft 2
 
 ### What changed
@@ -68,3 +76,17 @@ Before the fix, the system stated a draft-only rule ("two API lots for three bat
 - Each answer shows a collapsible Sources list (title, draft/final status, PDF page), no sources on refusals, and a warning banner when any source is draft guidance.
 - Citation formatting lives in one function (`get_citations` in `main.py`) shared by the terminal chat and the web UI.
 - Streamlit's file watcher is disabled in `.streamlit/config.toml`: it scanned every module in `transformers` and logged hundreds of harmless `torchvision` import errors. Restart the app after code changes.
+
+
+## Draft 6
+
+- **Upload your own PDFs** ("My documents" in the sidebar). Each browser session gets a private folder and its own search index; the index rebuilds automatically when files are added or removed.
+- **General-purpose prompt for uploads**, which forbids outside knowledge even when the model knows the answer. Tested: asked "What is the capital of France?" over FDA documents, it declined.
+- **Summarize button**: sends a whole document to Claude in one call, since search-based retrieval (12 chunks) can't summarize a full document. Documents over ~100k tokens are cut off, and the summary says so. Draft status is detected and stated in the first sentence.
+- **Design choice**: an explicit Summarize button instead of LangGraph routing. The user chooses question vs. summary, so there's no intent to infer; LangGraph would add value for free-text requests like "compare section 3 of both files."
+
+### Known limitations
+- Answers are grounded in the documents, but retrieved text is sent to Anthropic's API. Suitable for public or non-sensitive documents; a fully private version would need a local model.
+- Upload folders are not deleted automatically: each browser session leaves a folder in `uploads/` (excluded from Git).
+- Draft detection uses FDA's standard draft phrases; other organizations' drafts are tagged N/A.
+- The 21-question eval covers the FDA library only. Uploads can't have pre-written answers.
