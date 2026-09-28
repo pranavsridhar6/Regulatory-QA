@@ -60,3 +60,11 @@ At an equal budget of 8 chunks, hybrid search lost two questions whose answers r
 | 9 docs, status shown to model | 16/20 | PASS |
 
 Before the fix, the system stated a draft-only rule ("two API lots for three batches") as a binding requirement. After, it labels it as draft guidance. Adding the draft Q&A cost two questions (q02, q07): its chunks cover the same topics as the final RTR guidance and crowd final-guidance chunks out of the retrieval slots. When final text isn't retrieved, answers can still lead with the draft point before the caveat.
+
+## Draft 5
+
+- **Streamlit chat UI** (`app.py`): run with `python -m streamlit run app.py`.
+- The QA chain is built once per server with `@st.cache_resource`; chat history is kept in `st.session_state` so it survives Streamlit's rerun-on-every-interaction model.
+- Each answer shows a collapsible Sources list (title, draft/final status, PDF page), no sources on refusals, and a warning banner when any source is draft guidance.
+- Citation formatting lives in one function (`get_citations` in `main.py`) shared by the terminal chat and the web UI.
+- Streamlit's file watcher is disabled in `.streamlit/config.toml`: it scanned every module in `transformers` and logged hundreds of harmless `torchvision` import errors. Restart the app after code changes.

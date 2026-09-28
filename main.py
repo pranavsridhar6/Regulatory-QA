@@ -250,6 +250,20 @@ def setup_qa_system(folder_path):
 
     return qa_chain
 
+# --- Turn an answer's retrieved chunks into readable citations, one per page, no duplicates ---
+def get_citations(answer):
+    citations = []
+    for doc in answer["source_documents"]:
+        file_name = os.path.basename(doc.metadata["source"])
+        page_number = doc.metadata["page"] + 1
+        title = DOC_INFO.get(file_name, {}).get("title", file_name)
+        status = doc.metadata.get("status", "UNTAGGED")
+        citation = f"{title} [{status}], PDF Page: {page_number}"
+        if citation not in citations:
+            citations.append(citation)
+    return citations
+
+
 if __name__ == '__main__':
     qa_chain = setup_qa_system(r"C:\Projects\regulatory-qa\docs")
 
@@ -265,17 +279,8 @@ if __name__ == '__main__':
         if answer['result'].strip() == NO_ANSWER:
             continue
         print('\nSource Documents:')
-        seen=set()
-        for doc in answer['source_documents']:
-            file_name = os.path.basename(doc.metadata['source'])
-            page_number = doc.metadata['page'] + 1
-            # Title from DOC_INFO if listed, otherwise the file name. Status comes from the PDF text.
-            title = DOC_INFO.get(file_name, {}).get('title', file_name)
-            status = doc.metadata.get('status', 'UNTAGGED')
-            citation = f"{title} [{status}], PDF Page: {page_number}"
-            if citation not in seen:
-                seen.add(citation)
-                print(citation)
+        for citation in get_citations(answer):
+            print(citation)
 
 
 
