@@ -1,0 +1,3 @@
+[server]
+# Don't scan imported libraries for code changes. transformers triggers hundreds of harmless torchvision errors.
+fileWatcherType = "none"
