@@ -14,6 +14,7 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_core.prompts import PromptTemplate
 from langchain_core.globals import set_llm_cache
 from langchain_community.cache import SQLiteCache
+import json
 
 load_dotenv()
 
@@ -58,6 +59,8 @@ QA_PROMPT = PromptTemplate(template=PROMPT_TEXT, input_variables=["context", "qu
 
 # Folder where the search index is saved, so we don't rebuild it every run
 INDEX_DIR = "faiss_index"
+# File inside the index folder recording which PDFs the index was built from
+FINGERPRINT_FILE = os.path.join(INDEX_DIR, "fingerprint.json")
 
 # File where Claude's answers are saved. Same prompt in = saved answer out, no new API call.
 # Delete this file to force fresh answers from Claude.
@@ -69,11 +72,31 @@ TOP_K = 8
 # --- Answer cache: makes repeat questions return identical answers (needed for a repeatable eval) ---
 set_llm_cache(SQLiteCache(database_path=CACHE_PATH))
 
+# --- Fingerprint of the docs folder: each PDF's name, size, and last-modified time ---
+# If any PDF is added, removed, or edited, the fingerprint changes and the index rebuilds.
+def docs_fingerprint(folder_path):
+    files = []
+    for name in sorted(os.listdir(folder_path)):
+        if name.lower().endswith(".pdf"):
+            stats = os.stat(os.path.join(folder_path, name))
+            files.append([name, stats.st_size, int(stats.st_mtime)])
+    return files
+
+
+
+
 def setup_qa_system(folder_path):
     # Embedder: turns text into 384 numbers that capture its meaning
     embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
 
-    if os.path.exists(INDEX_DIR):
+        # --- Compare the PDFs in the folder now against the ones the saved index was built from ---
+    current = docs_fingerprint(folder_path)
+    saved = None
+    if os.path.exists(FINGERPRINT_FILE):
+        with open(FINGERPRINT_FILE, encoding="utf-8") as f:
+            saved = json.load(f)
+
+    if saved == current:
         # A saved index exists: load it instead of re-reading all the PDFs
         vector_store = FAISS.load_local(
             INDEX_DIR, embeddings, allow_dangerous_deserialization=True
@@ -91,7 +114,9 @@ def setup_qa_system(folder_path):
 
         # Turn every chunk into numbers, build the index, and save it to disk
         vector_store = FAISS.from_documents(chunks, embeddings)
-        vector_store.save_local(INDEX_DIR)
+                # Record which PDFs this index was built from, for the check on the next run
+        with open(FINGERPRINT_FILE, "w", encoding="utf-8") as f:
+            json.dump(current, f)
         print("Built and saved new index")
 
     # --- Retriever: returns the TOP_K closest chunks to each question ---
