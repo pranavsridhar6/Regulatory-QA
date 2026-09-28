@@ -178,5 +178,14 @@
     "key_facts": [],
     "expected_doc": null,
     "pdf_pages": []
+  },
+  {
+    "id": "q21",
+    "type": "draft_check",
+    "question": "Must an ANDA use two API lots to manufacture three batches of each strength?",
+    "expected_answer": "This comes only from the 2017 draft RTR Q&A (Q18). The answer must say it is draft guidance, not a final requirement.",
+    "key_facts": [["draft"]],
+    "expected_doc": "ANDA-Submissions---Refuse-to-Receive-Standards----Questions-and-Answers-Guidance-for-Industry.pdf",
+    "pdf_pages": [12]
   }
 ]

@@ -38,6 +38,12 @@ DOC_INFO = {
         {'title': 'ANDA Submissions: Content and Format (Rev. 1, June 2019)', 'status': 'FINAL'},
     'GUI_Final_Referencing_Approved _Oct 2020.pdf':
         {'title': 'Referencing Approved Drug Products in ANDA Submissions (Oct 2020)', 'status': 'FINAL'},
+    '58381904fnl_Statistical Approaches to Establishing Bioequivalence.pdf':
+        {'title': 'Statistical Approaches to Establishing Bioequivalence (May 2026)'},
+    'ANDA-Submissions---Refuse-to-Receive-Standards----Questions-and-Answers-Guidance-for-Industry.pdf':
+        {'title': 'ANDA Submissions: Refuse-to-Receive Standards Q&A (Oct 2017)'},
+    'Submission-of-Summary-Bioequivalence-Data-for-Abbreviated-New-Drug-Applications.pdf':
+        {'title': 'Submission of Summary Bioequivalence Data for ANDAs (May 2011)'},
 }
 
 NO_ANSWER = "The loaded FDA guidance documents do not address this."
@@ -45,6 +51,12 @@ NO_ANSWER = "The loaded FDA guidance documents do not address this."
 PROMPT_TEXT = """You answer questions about FDA generic-drug (ANDA) guidance documents.
 
 Use only the excerpts below. Start directly with the answer. Do not open with phrases like "Based on the provided context", and do not mention the excerpts or the context.
+
+Each excerpt is labeled [FINAL] or [DRAFT]. Draft guidance is not for implementation and is not FDA's current policy. Base your answer on FINAL excerpts. 
+
+Use a DRAFT excerpt only if no FINAL excerpt covers the point, and then state clearly that it comes from draft guidance that is not final. 
+
+If a DRAFT excerpt conflicts with a FINAL excerpt, follow the FINAL one.
 
 If the excerpts answer only part of the question, answer that part and say which part the documents do not cover.
 
@@ -60,6 +72,9 @@ Question: {question}
 Answer:"""
 
 QA_PROMPT = PromptTemplate(template=PROMPT_TEXT, input_variables=["context", "question"])
+
+# How each retrieved chunk appears inside {context}: its status label, then its text
+DOC_PROMPT = PromptTemplate(template="[{status}]\n{page_content}", input_variables=["page_content", "status"])
 
 # Folder where the search index is saved, so we don't rebuild it every run
 INDEX_DIR = "faiss_index"
@@ -230,7 +245,7 @@ def setup_qa_system(folder_path):
         llm,
         retriever=retriever,
         return_source_documents=True,
-        chain_type_kwargs={"prompt": QA_PROMPT}
+        chain_type_kwargs={"prompt": QA_PROMPT, "document_prompt": DOC_PROMPT},
     )
 
     return qa_chain

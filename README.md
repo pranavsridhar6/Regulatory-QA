@@ -45,3 +45,18 @@ Keyword + semantic (hybrid) search for exact codes, reranking, cleanup of the 3 
 At an equal budget of 8 chunks, hybrid search lost two questions whose answers ranked 5th–8th in meaning search. Adding keyword results on top of the full meaning results gained one question with no regressions, at the cost of up to 12 chunks per answer. With 20 questions, a one-question difference is within noise.
 
 **Remaining failures:** q09 and q15 fail because the page-by-page splitter separates related bullets across a page break (the answers sit at the bottom of one page; the retrieved chunk starts the next). q08 retrieves the right passage but without its section label.
+
+## Draft 4
+
+- **Automatic draft/final detection**: each PDF's status is read from its first 3 pages ("Not for Implementation", "distributed for comment purposes only"). A plain search for "draft" would mislabel final guidances that cite other drafts. PDFs that aren't FDA guidance are tagged N/A.
+- **Line-number cleanup**: two PDFs had printed margin line numbers mixed into the text. The cleaner finds each page's longest unbroken run of numbers (20+) and removes only numbers inside that run, so table values, footnote markers, and pages without line numbers are left untouched. Tested on all 9 PDFs: 0 pages changed in the 7 without line numbers.
+- **Corpus expanded to 9 documents (263 pages)**, including a 2017 **draft** Q&A that overlaps the final RTR guidance.
+- **Draft-aware answers**: each excerpt reaches the model labeled [FINAL] or [DRAFT], with instructions to prefer final guidance and explicitly flag anything drawn from a draft.
+
+| Setting | Original 20 | Draft check (q21) |
+|---|---|---|
+| 6 docs, hybrid retrieval | 17/20 | n/a |
+| 9 docs, status hidden from model | 15/20 | n/a |
+| 9 docs, status shown to model | 16/20 | PASS |
+
+Before the fix, the system stated a draft-only rule ("two API lots for three batches") as a binding requirement. After, it labels it as draft guidance. Adding the draft Q&A cost two questions (q02, q07): its chunks cover the same topics as the final RTR guidance and crowd final-guidance chunks out of the retrieval slots. When final text isn't retrieved, answers can still lead with the draft point before the caveat.
