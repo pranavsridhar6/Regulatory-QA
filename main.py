@@ -15,6 +15,10 @@ from langchain_core.prompts import PromptTemplate
 from langchain_core.globals import set_llm_cache
 from langchain_community.cache import SQLiteCache
 import json
+import re
+from langchain_community.retrievers import BM25Retriever
+from langchain.retrievers import EnsembleRetriever
+
 
 load_dotenv()
 
@@ -72,6 +76,13 @@ TOP_K = 8
 # --- Answer cache: makes repeat questions return identical answers (needed for a repeatable eval) ---
 set_llm_cache(SQLiteCache(database_path=CACHE_PATH))
 
+
+# --- Split text into lowercase words for keyword search. Keeps section codes like "1.3.3" whole. ---
+def simple_tokenize(text):
+    return re.findall(r"\w+(?:\.\w+)*", text.lower())
+
+
+
 # --- Fingerprint of the docs folder: each PDF's name, size, and last-modified time ---
 # If any PDF is added, removed, or edited, the fingerprint changes and the index rebuilds.
 def docs_fingerprint(folder_path):
@@ -120,7 +131,16 @@ def setup_qa_system(folder_path):
         print("Built and saved new index")
 
     # --- Retriever: returns the TOP_K closest chunks to each question ---
-    retriever = vector_store.as_retriever(search_kwargs={"k": TOP_K})
+        # --- Keyword search (BM25): scores chunks by shared words, rare words count most ---
+    all_chunks = list(vector_store.docstore._dict.values())
+    keyword_retriever = BM25Retriever.from_documents(all_chunks, preprocess_func=simple_tokenize)
+    keyword_retriever.k = TOP_K // 2
+
+    # --- Meaning search (FAISS): finds chunks with similar meaning ---
+    meaning_retriever = vector_store.as_retriever(search_kwargs={"k": TOP_K})
+
+    # --- Hybrid: run both searches and merge their results into one ranked list ---
+    retriever = EnsembleRetriever(retrievers=[keyword_retriever, meaning_retriever], weights=[0.5, 0.5])
     llm = ChatAnthropic(model="claude-sonnet-4-6")
 
     qa_chain = RetrievalQA.from_chain_type(

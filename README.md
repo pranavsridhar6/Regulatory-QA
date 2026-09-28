@@ -29,3 +29,19 @@ The 4 remaining failures all retrieved the correct document but not the passage 
 
 ### Next
 Keyword + semantic (hybrid) search for exact codes, reranking, cleanup of the 3 parked PDFs (including tagging the 2017 draft), then LangGraph and a Streamlit UI.
+
+## Draft 3
+
+- **Automatic index rebuilds**: the index stores a fingerprint (name, size, modified time) of every PDF it was built from, and rebuilds itself when files are added, removed, or edited.
+- **Hybrid search**: keyword search (BM25, with a tokenizer that keeps section codes like "1.3.3" intact) merged with meaning-based search.
+
+| Retrieval setting | Chunks sent | Score |
+|---|---|---|
+| Meaning search, top 4 | 4 | 13/20 |
+| Meaning search, top 8 | 8 | 16/20 |
+| Hybrid, 4 keyword + 4 meaning | ≤ 8 | 15/20 |
+| Hybrid, 4 keyword + 8 meaning | ≤ 12 | **17/20** |
+
+At an equal budget of 8 chunks, hybrid search lost two questions whose answers ranked 5th–8th in meaning search. Adding keyword results on top of the full meaning results gained one question with no regressions, at the cost of up to 12 chunks per answer. With 20 questions, a one-question difference is within noise.
+
+**Remaining failures:** q09 and q15 fail because the page-by-page splitter separates related bullets across a page break (the answers sit at the bottom of one page; the retrieved chunk starts the next). q08 retrieves the right passage but without its section label.
