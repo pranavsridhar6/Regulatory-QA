@@ -35,7 +35,7 @@ def grade(result):
 
 
 # --- Build the same QA chain main.py uses (loads the saved index, uses the answer cache) ---
-qa_chain = setup_qa_system(r"C:\Projects\regulatory-qa\docs")
+qa_chain = setup_qa_system(r"docs")
 
 # --- Ask every question and keep the answer plus the files it cited ---
 results = []

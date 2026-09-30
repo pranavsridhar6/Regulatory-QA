@@ -337,7 +337,7 @@ def get_citations(answer):
 
 
 if __name__ == '__main__':
-    qa_chain = setup_qa_system(r"C:\Projects\regulatory-qa\docs")
+    qa_chain = setup_qa_system(r"docs")
 
     while True:
         question = input('\nAsk a question: ')

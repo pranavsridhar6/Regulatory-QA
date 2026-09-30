@@ -1,25 +1,26 @@
-# Regulatory QA
+# PDF RAG Assistant
 
-PDF parser that lets you upload your PDFs and ask any questions related to them you want. Answers are 100% grounded in the selected documents and include page citations; draft sources are clearly labeled. Feel free to play around with default Regulatory FDA PDFs as a sample or click upload documents and get started with analyzing your own documents.
+Upload your PDFs and ask questions about them. Answers come only from the documents you select, each with page-level citations, and the assistant declines when the documents don't contain the answer. Try it on the built-in library of FDA guidance documents, or upload your own.
+
+> **For regulatory teams:** built around FDA guidance. It detects draft guidance automatically and flags it in every answer that relies on it, so draft recommendations are never presented as final policy. Every claim cites the document and page, so you can verify it in seconds.
 
 ## Features
 
-- Hybrid keyword and semantic search across 9 FDA generic-drug guidance documents
-- Upload and search your own PDFs, with document summaries
-- Refuses questions the documents do not answer
+- Hybrid keyword and semantic search, so exact terms (section numbers, defined terms) are found as well as paraphrases
+- Upload and search your own PDFs, with one-click document summaries
+- Page-level citations, with draft sources clearly labeled
+- Declines questions the documents don't answer, even when the model knows the answer from elsewhere
 
 ## Run
 
-Install dependencies with `pip install -r requirements.txt`, set your `ANTHROPIC_API_KEY`, then start the app:
+Install dependencies with `pip install -r requirements.txt`, create a `.env` file containing `ANTHROPIC_API_KEY=your-key`, then start the app:
 
-```bash
-python -m streamlit run app.py
-```
+    python -m streamlit run app.py
 
 Open http://localhost:8501.
 
 ## Evaluation
 
-Scores **17/20** on the 20-question FDA guidance benchmark. See [evaluation results](eval_results_hybrid12.md).
+On a 20-question FDA guidance benchmark with hand-verified answers: 16/20 correct, 3/3 out-of-corpus questions correctly declined, and draft-only guidance correctly flagged as draft. See [evaluation results](eval_results_draft_aware.md).
 
 **Stack:** Python, Streamlit, LangChain, FAISS, BM25, local Hugging Face embeddings, and Claude.

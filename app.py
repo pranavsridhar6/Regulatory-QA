@@ -14,7 +14,7 @@ from main import (
 )
 
 # Where the FDA library lives, and where each session's uploads are saved
-FDA_DOCS = r"C:\Projects\regulatory-qa\docs"
+FDA_DOCS = r"docs"
 UPLOADS_ROOT = "uploads"
 
 # --- Page settings: must be the first Streamlit command ---
