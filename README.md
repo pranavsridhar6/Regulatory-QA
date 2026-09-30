@@ -17,7 +17,7 @@ Install dependencies with `pip install -r requirements.txt`, create a `.env` fil
 
     python -m streamlit run app.py
 
-Open http://localhost:8501.
+Then open `http://localhost:8501` in your browser.
 
 ## Evaluation
 
