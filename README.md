@@ -1,6 +1,6 @@
 # Regulatory QA
 
-Ask questions about FDA guidance or your own PDFs. Answers are grounded in the selected documents and include page citations; draft sources are clearly labeled.
+PDF parser that lets you upload your PDFs and ask any questions related to them you want. Answers are 100% grounded in the selected documents and include page citations; draft sources are clearly labeled. Feel free to play around with default Regulatory FDA PDFs as a sample or click upload documents and get started with analyzing your own documents.
 
 ## Features
 
